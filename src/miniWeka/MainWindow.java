@@ -6,7 +6,16 @@
 package miniWeka;
 
 import java.io.File;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.JFileChooser;
+import weka.attributeSelection.CfsSubsetEval;
+import weka.attributeSelection.GreedyStepwise;
+import weka.core.converters.ConverterUtils.DataSource;
+import weka.core.Instances;
+import weka.core.converters.ConverterUtils.DataSink;
+import weka.filters.Filter;
+import weka.filters.unsupervised.attribute.NumericToNominal;
 
 /**
  *
@@ -29,10 +38,11 @@ public class MainWindow extends javax.swing.JFrame {
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
-        java.awt.GridBagConstraints gridBagConstraints;
 
         jPanel1 = new javax.swing.JPanel();
+        jPanel3 = new javax.swing.JPanel();
         openButton = new javax.swing.JButton();
+        filterButton = new javax.swing.JButton();
         saveButton = new javax.swing.JButton();
         jPanel2 = new javax.swing.JPanel();
         jToolBar1 = new javax.swing.JToolBar();
@@ -42,9 +52,9 @@ public class MainWindow extends javax.swing.JFrame {
         jMenu2 = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        getContentPane().setLayout(new javax.swing.BoxLayout(getContentPane(), javax.swing.BoxLayout.LINE_AXIS));
+        getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        jPanel1.setLayout(new java.awt.GridBagLayout());
+        jPanel1.setLayout(new java.awt.BorderLayout());
 
         openButton.setText("Open File");
         openButton.addActionListener(new java.awt.event.ActionListener() {
@@ -52,15 +62,27 @@ public class MainWindow extends javax.swing.JFrame {
                 openButtonActionPerformed(evt);
             }
         });
-        jPanel1.add(openButton, new java.awt.GridBagConstraints());
+        jPanel3.add(openButton);
+
+        filterButton.setText("Filter");
+        filterButton.setEnabled(false);
+        filterButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                filterButtonActionPerformed(evt);
+            }
+        });
+        jPanel3.add(filterButton);
 
         saveButton.setText("Save File");
+        saveButton.setEnabled(false);
         saveButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 saveButtonActionPerformed(evt);
             }
         });
-        jPanel1.add(saveButton, new java.awt.GridBagConstraints());
+        jPanel3.add(saveButton);
+
+        jPanel1.add(jPanel3, java.awt.BorderLayout.CENTER);
 
         jPanel2.setLayout(new javax.swing.BoxLayout(jPanel2, javax.swing.BoxLayout.LINE_AXIS));
 
@@ -69,11 +91,9 @@ public class MainWindow extends javax.swing.JFrame {
 
         jPanel2.add(jToolBar1);
 
-        gridBagConstraints = new java.awt.GridBagConstraints();
-        gridBagConstraints.gridy = 1;
-        jPanel1.add(jPanel2, gridBagConstraints);
+        jPanel1.add(jPanel2, java.awt.BorderLayout.PAGE_START);
 
-        getContentPane().add(jPanel1);
+        getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 400, 279));
 
         jMenu1.setText("File");
         jMenuBar1.add(jMenu1);
@@ -87,16 +107,26 @@ public class MainWindow extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void openButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openButtonActionPerformed
-        if(evt.getSource()==this.openButton) {
-            fc.setAcceptAllFileFilterUsed(false);
-            fc.addChoosableFileFilter(new CustomFilter());
-            int returnVal = fc.showOpenDialog(MainWindow.this);
+        if(evt.getSource() == this.openButton) {
+            this.fc.setAcceptAllFileFilterUsed(false);
+            this.fc.addChoosableFileFilter(new CustomFilter());
+            int returnVal = this.fc.showOpenDialog(MainWindow.this);
             
             
             if (returnVal == JFileChooser.APPROVE_OPTION) {
-                File file = fc.getSelectedFile();
-                
-                this.status.setText("Opening: " + file.getName() + ".\n");
+                try {
+                    File file = this.fc.getSelectedFile();
+                    this.status.setText("Opening: " + file.getName() + ".\n");
+                    this.data = DataSource.read(file.getAbsolutePath());
+                    if (this.data.classIndex() == -1) {
+                        this.data.setClassIndex(this.data.numAttributes() - 1);
+                    }
+                    this.saveButton.setEnabled(true);
+                    this.filterButton.setEnabled(true);
+                    this.dataFilter = null;
+                } catch (Exception ex) {
+                    Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+                }
             } else {
                 this.status.setText("Open command cancelled by user.\n");
             }
@@ -104,8 +134,40 @@ public class MainWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_openButtonActionPerformed
 
     private void saveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveButtonActionPerformed
-        // TODO add your handling code here:
+        if(evt.getSource()==this.saveButton) {
+            this.fc.setAcceptAllFileFilterUsed(false);
+            this.fc.addChoosableFileFilter(new CustomFilter());
+            int returnVal = this.fc.showSaveDialog(MainWindow.this);
+            
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                try {
+                    File file = this.fc.getSelectedFile();
+                    this.status.setText("Saving: " + file.getName() + ".\n");
+                    if (this.dataFilter == null) {
+                        DataSink.write(file.getAbsolutePath(), this.data);
+                    } else {
+                        DataSink.write(file.getAbsolutePath(), this.dataFilter);
+                    }
+                } catch (Exception ex) {
+                    Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } else {
+                this.status.setText("Save command cancelled by user.\n");
+            }
+        }    
     }//GEN-LAST:event_saveButtonActionPerformed
+
+    private void filterButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_filterButtonActionPerformed
+        if (evt.getSource() == this.filterButton) { 
+            try {
+                NumericToNominal filter = new NumericToNominal();
+                filter.setInputFormat(this.data);
+                this.dataFilter = Filter.useFilter(this.data, filter);
+            } catch (Exception ex) {
+                Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_filterButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -141,13 +203,17 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
     }
+    private Instances data;
+    private Instances dataFilter;
     private final JFileChooser fc = new JFileChooser();
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton filterButton;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenu jMenu2;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
+    private javax.swing.JPanel jPanel3;
     private javax.swing.JToolBar jToolBar1;
     private javax.swing.JButton openButton;
     private javax.swing.JButton saveButton;
