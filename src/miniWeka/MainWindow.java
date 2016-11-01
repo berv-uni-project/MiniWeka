@@ -6,11 +6,16 @@
 package miniWeka;
 
 import java.io.File;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
 import weka.attributeSelection.CfsSubsetEval;
 import weka.attributeSelection.GreedyStepwise;
+import weka.classifiers.Classifier;
+import weka.classifiers.Evaluation;
+import weka.classifiers.meta.AttributeSelectedClassifier;
+import weka.classifiers.trees.J48;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.core.Instances;
 import weka.core.converters.ConverterUtils.DataSink;
@@ -39,22 +44,41 @@ public class MainWindow extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
-        jPanel1 = new javax.swing.JPanel();
-        jPanel3 = new javax.swing.JPanel();
+        evaluateRadioGroup = new javax.swing.ButtonGroup();
+        allBar = new javax.swing.JPanel();
+        mainBar = new javax.swing.JPanel();
         openButton = new javax.swing.JButton();
         filterButton = new javax.swing.JButton();
         saveButton = new javax.swing.JButton();
-        jPanel2 = new javax.swing.JPanel();
-        jToolBar1 = new javax.swing.JToolBar();
+        currentRelation = new javax.swing.JPanel();
+        relationLabel = new javax.swing.JLabel();
+        relationValue = new javax.swing.JLabel();
+        attributesLabel = new javax.swing.JLabel();
+        attributesValue = new javax.swing.JLabel();
+        instancesLabel = new javax.swing.JLabel();
+        instancesValue = new javax.swing.JLabel();
+        sumOfWeightsLabel = new javax.swing.JLabel();
+        sumOfWeightsValue = new javax.swing.JLabel();
+        evaluateBar = new javax.swing.JPanel();
+        evaluateLabel = new javax.swing.JLabel();
+        crossRadio = new javax.swing.JRadioButton();
+        fullRadio = new javax.swing.JRadioButton();
+        startButton = new javax.swing.JButton();
+        resultEvaluate = new javax.swing.JScrollPane();
+        resultEvaluateArea = new javax.swing.JTextArea();
+        statusBar = new javax.swing.JPanel();
         status = new javax.swing.JLabel();
-        jMenuBar1 = new javax.swing.JMenuBar();
-        jMenu1 = new javax.swing.JMenu();
-        jMenu2 = new javax.swing.JMenu();
+        defaultMenu = new javax.swing.JMenuBar();
+        File = new javax.swing.JMenu();
+        exit = new javax.swing.JMenuItem();
+        Help = new javax.swing.JMenu();
+        aboutMenu = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
+        setTitle("Mini Weka");
+        getContentPane().setLayout(new java.awt.GridLayout());
 
-        jPanel1.setLayout(new java.awt.BorderLayout());
+        allBar.setLayout(new javax.swing.BoxLayout(allBar, javax.swing.BoxLayout.Y_AXIS));
 
         openButton.setText("Open File");
         openButton.addActionListener(new java.awt.event.ActionListener() {
@@ -62,7 +86,7 @@ public class MainWindow extends javax.swing.JFrame {
                 openButtonActionPerformed(evt);
             }
         });
-        jPanel3.add(openButton);
+        mainBar.add(openButton);
 
         filterButton.setText("Filter");
         filterButton.setEnabled(false);
@@ -71,7 +95,7 @@ public class MainWindow extends javax.swing.JFrame {
                 filterButtonActionPerformed(evt);
             }
         });
-        jPanel3.add(filterButton);
+        mainBar.add(filterButton);
 
         saveButton.setText("Save File");
         saveButton.setEnabled(false);
@@ -80,28 +104,99 @@ public class MainWindow extends javax.swing.JFrame {
                 saveButtonActionPerformed(evt);
             }
         });
-        jPanel3.add(saveButton);
+        mainBar.add(saveButton);
 
-        jPanel1.add(jPanel3, java.awt.BorderLayout.CENTER);
+        allBar.add(mainBar);
 
-        jPanel2.setLayout(new javax.swing.BoxLayout(jPanel2, javax.swing.BoxLayout.LINE_AXIS));
+        currentRelation.setLayout(new java.awt.GridLayout(2, 2));
 
-        jToolBar1.setRollover(true);
-        jToolBar1.add(status);
+        relationLabel.setText("Relation : ");
+        currentRelation.add(relationLabel);
+        currentRelation.add(relationValue);
 
-        jPanel2.add(jToolBar1);
+        attributesLabel.setText("Attributes : ");
+        currentRelation.add(attributesLabel);
+        currentRelation.add(attributesValue);
 
-        jPanel1.add(jPanel2, java.awt.BorderLayout.PAGE_START);
+        instancesLabel.setText("Instances : ");
+        currentRelation.add(instancesLabel);
+        currentRelation.add(instancesValue);
 
-        getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 400, 279));
+        sumOfWeightsLabel.setText("Sum of weights : ");
+        currentRelation.add(sumOfWeightsLabel);
+        currentRelation.add(sumOfWeightsValue);
 
-        jMenu1.setText("File");
-        jMenuBar1.add(jMenu1);
+        allBar.add(currentRelation);
 
-        jMenu2.setText("Help");
-        jMenuBar1.add(jMenu2);
+        evaluateBar.setLayout(new javax.swing.BoxLayout(evaluateBar, javax.swing.BoxLayout.Y_AXIS));
 
-        setJMenuBar(jMenuBar1);
+        evaluateLabel.setText("Mode Pembelajaran :");
+        evaluateBar.add(evaluateLabel);
+
+        evaluateRadioGroup.add(crossRadio);
+        crossRadio.setText("Cross-Validation 10-fold");
+        crossRadio.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                crossRadioActionPerformed(evt);
+            }
+        });
+        evaluateBar.add(crossRadio);
+
+        evaluateRadioGroup.add(fullRadio);
+        fullRadio.setText("Full Training");
+        fullRadio.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                fullRadioActionPerformed(evt);
+            }
+        });
+        evaluateBar.add(fullRadio);
+
+        startButton.setText("Start");
+        startButton.setEnabled(false);
+        startButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                startButtonActionPerformed(evt);
+            }
+        });
+        evaluateBar.add(startButton);
+
+        resultEvaluateArea.setEditable(false);
+        resultEvaluateArea.setColumns(20);
+        resultEvaluateArea.setRows(5);
+        resultEvaluateArea.setCursor(new java.awt.Cursor(java.awt.Cursor.DEFAULT_CURSOR));
+        resultEvaluate.setViewportView(resultEvaluateArea);
+
+        evaluateBar.add(resultEvaluate);
+
+        allBar.add(evaluateBar);
+
+        statusBar.setLayout(new javax.swing.BoxLayout(statusBar, javax.swing.BoxLayout.LINE_AXIS));
+        statusBar.add(status);
+
+        allBar.add(statusBar);
+
+        getContentPane().add(allBar);
+
+        File.setText("File");
+
+        exit.setText("Exit");
+        exit.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                exitActionPerformed(evt);
+            }
+        });
+        File.add(exit);
+
+        defaultMenu.add(File);
+
+        Help.setText("Help");
+
+        aboutMenu.setText("About");
+        Help.add(aboutMenu);
+
+        defaultMenu.add(Help);
+
+        setJMenuBar(defaultMenu);
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -112,7 +207,6 @@ public class MainWindow extends javax.swing.JFrame {
             this.fc.addChoosableFileFilter(new CustomFilter());
             int returnVal = this.fc.showOpenDialog(MainWindow.this);
             
-            
             if (returnVal == JFileChooser.APPROVE_OPTION) {
                 try {
                     File file = this.fc.getSelectedFile();
@@ -121,9 +215,13 @@ public class MainWindow extends javax.swing.JFrame {
                     if (this.data.classIndex() == -1) {
                         this.data.setClassIndex(this.data.numAttributes() - 1);
                     }
+                    this.instancesValue.setText(String.valueOf(this.data.numInstances()));
+                    this.attributesValue.setText(String.valueOf(this.data.numAttributes()));
+                    this.relationValue.setText(String.valueOf(this.data.relationName()));
+                    this.sumOfWeightsValue.setText(String.valueOf(this.data.sumOfWeights()));
                     this.saveButton.setEnabled(true);
                     this.filterButton.setEnabled(true);
-                    this.dataFilter = null;
+                    this.startButton.setEnabled(true);
                 } catch (Exception ex) {
                     Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -143,11 +241,7 @@ public class MainWindow extends javax.swing.JFrame {
                 try {
                     File file = this.fc.getSelectedFile();
                     this.status.setText("Saving: " + file.getName() + ".\n");
-                    if (this.dataFilter == null) {
-                        DataSink.write(file.getAbsolutePath(), this.data);
-                    } else {
-                        DataSink.write(file.getAbsolutePath(), this.dataFilter);
-                    }
+                    DataSink.write(file.getAbsolutePath(), this.data);
                 } catch (Exception ex) {
                     Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -162,12 +256,53 @@ public class MainWindow extends javax.swing.JFrame {
             try {
                 NumericToNominal filter = new NumericToNominal();
                 filter.setInputFormat(this.data);
-                this.dataFilter = Filter.useFilter(this.data, filter);
+                this.data = Filter.useFilter(this.data, filter);
             } catch (Exception ex) {
                 Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }//GEN-LAST:event_filterButtonActionPerformed
+
+    private void startButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startButtonActionPerformed
+        if (evt.getSource() == this.startButton) {
+            if (this.crossRadio.isSelected()) {
+                try {
+                    // cross-validate classifier
+                    Evaluation evaluation = new Evaluation(this.data);
+                    J48 tree = new J48();
+                    evaluation.crossValidateModel(tree, this.data, 10, new Random(1));
+                    this.resultEvaluateArea.setText(evaluation.toSummaryString());
+                } catch (Exception ex) {
+                    Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } else if (this.fullRadio.isSelected()) {
+                try {
+                    Classifier cls = new J48();
+                    cls.buildClassifier(this.data);
+                    //evaluate classifier and print some statistics
+                    Evaluation eval = new Evaluation(this.data);
+                    eval.evaluateModel(cls, this.data);
+                    this.resultEvaluateArea.setText(eval.toSummaryString());
+                } catch (Exception ex) {
+                    Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } else {
+                
+            }
+        }
+    }//GEN-LAST:event_startButtonActionPerformed
+
+    private void crossRadioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_crossRadioActionPerformed
+        
+    }//GEN-LAST:event_crossRadioActionPerformed
+
+    private void fullRadioActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_fullRadioActionPerformed
+        
+    }//GEN-LAST:event_fullRadioActionPerformed
+
+    private void exitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitActionPerformed
+        System.exit(0);
+    }//GEN-LAST:event_exitActionPerformed
 
     /**
      * @param args the command line arguments
@@ -204,19 +339,36 @@ public class MainWindow extends javax.swing.JFrame {
         });
     }
     private Instances data;
-    private Instances dataFilter;
     private final JFileChooser fc = new JFileChooser();
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JMenu File;
+    private javax.swing.JMenu Help;
+    private javax.swing.JMenuItem aboutMenu;
+    private javax.swing.JPanel allBar;
+    private javax.swing.JLabel attributesLabel;
+    private javax.swing.JLabel attributesValue;
+    private javax.swing.JRadioButton crossRadio;
+    private javax.swing.JPanel currentRelation;
+    private javax.swing.JMenuBar defaultMenu;
+    private javax.swing.JPanel evaluateBar;
+    private javax.swing.JLabel evaluateLabel;
+    private javax.swing.ButtonGroup evaluateRadioGroup;
+    private javax.swing.JMenuItem exit;
     private javax.swing.JButton filterButton;
-    private javax.swing.JMenu jMenu1;
-    private javax.swing.JMenu jMenu2;
-    private javax.swing.JMenuBar jMenuBar1;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
-    private javax.swing.JToolBar jToolBar1;
+    private javax.swing.JRadioButton fullRadio;
+    private javax.swing.JLabel instancesLabel;
+    private javax.swing.JLabel instancesValue;
+    private javax.swing.JPanel mainBar;
     private javax.swing.JButton openButton;
+    private javax.swing.JLabel relationLabel;
+    private javax.swing.JLabel relationValue;
+    private javax.swing.JScrollPane resultEvaluate;
+    private javax.swing.JTextArea resultEvaluateArea;
     private javax.swing.JButton saveButton;
+    private javax.swing.JButton startButton;
     private javax.swing.JLabel status;
+    private javax.swing.JPanel statusBar;
+    private javax.swing.JLabel sumOfWeightsLabel;
+    private javax.swing.JLabel sumOfWeightsValue;
     // End of variables declaration//GEN-END:variables
 }
