@@ -66,7 +66,7 @@
     <Container class="javax.swing.JPanel" name="allBar">
 
       <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBoxLayout">
-        <Property name="axis" type="int" value="1"/>
+        <Property name="axis" type="int" value="3"/>
       </Layout>
       <SubComponents>
         <Container class="javax.swing.JPanel" name="mainBar">
@@ -99,13 +99,48 @@
                 <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="saveButtonActionPerformed"/>
               </Events>
             </Component>
+            <Component class="javax.swing.JButton" name="addInstanceButton">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Add Instance"/>
+                <Property name="enabled" type="boolean" value="false"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="addInstanceButtonActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="saveModelButton">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Save Model"/>
+                <Property name="enabled" type="boolean" value="false"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="saveModelButtonActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="loadModelButton">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Load Model"/>
+                <Property name="enabled" type="boolean" value="false"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="loadModelButtonActionPerformed"/>
+              </Events>
+            </Component>
+            <Component class="javax.swing.JButton" name="showDataButton">
+              <Properties>
+                <Property name="text" type="java.lang.String" value="Show Data"/>
+                <Property name="enabled" type="boolean" value="false"/>
+              </Properties>
+              <Events>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="showDataButtonActionPerformed"/>
+              </Events>
+            </Component>
           </SubComponents>
         </Container>
         <Container class="javax.swing.JPanel" name="currentRelation">
 
-          <Layout class="org.netbeans.modules.form.compat2.layouts.DesignGridLayout">
-            <Property name="columns" type="int" value="2"/>
-            <Property name="rows" type="int" value="2"/>
+          <Layout class="org.netbeans.modules.form.compat2.layouts.DesignBoxLayout">
+            <Property name="axis" type="int" value="1"/>
           </Layout>
           <SubComponents>
             <Component class="javax.swing.JLabel" name="relationLabel">
@@ -114,6 +149,9 @@
               </Properties>
             </Component>
             <Component class="javax.swing.JLabel" name="relationValue">
+              <Events>
+                <EventHandler event="propertyChange" listener="java.beans.PropertyChangeListener" parameters="java.beans.PropertyChangeEvent" handler="relationValuePropertyChange"/>
+              </Events>
             </Component>
             <Component class="javax.swing.JLabel" name="attributesLabel">
               <Properties>

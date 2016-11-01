@@ -10,14 +10,16 @@ import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JFileChooser;
-import weka.attributeSelection.CfsSubsetEval;
-import weka.attributeSelection.GreedyStepwise;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
-import weka.classifiers.meta.AttributeSelectedClassifier;
 import weka.classifiers.trees.J48;
+import weka.core.DenseInstance;
+import weka.core.Instance;
 import weka.core.converters.ConverterUtils.DataSource;
 import weka.core.Instances;
+import weka.core.SerializationHelper;
 import weka.core.converters.ConverterUtils.DataSink;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.NumericToNominal;
@@ -50,6 +52,10 @@ public class MainWindow extends javax.swing.JFrame {
         openButton = new javax.swing.JButton();
         filterButton = new javax.swing.JButton();
         saveButton = new javax.swing.JButton();
+        addInstanceButton = new javax.swing.JButton();
+        saveModelButton = new javax.swing.JButton();
+        loadModelButton = new javax.swing.JButton();
+        showDataButton = new javax.swing.JButton();
         currentRelation = new javax.swing.JPanel();
         relationLabel = new javax.swing.JLabel();
         relationValue = new javax.swing.JLabel();
@@ -78,7 +84,7 @@ public class MainWindow extends javax.swing.JFrame {
         setTitle("Mini Weka");
         getContentPane().setLayout(new java.awt.GridLayout());
 
-        allBar.setLayout(new javax.swing.BoxLayout(allBar, javax.swing.BoxLayout.Y_AXIS));
+        allBar.setLayout(new javax.swing.BoxLayout(allBar, javax.swing.BoxLayout.PAGE_AXIS));
 
         openButton.setText("Open File");
         openButton.addActionListener(new java.awt.event.ActionListener() {
@@ -106,12 +112,54 @@ public class MainWindow extends javax.swing.JFrame {
         });
         mainBar.add(saveButton);
 
+        addInstanceButton.setText("Add Instance");
+        addInstanceButton.setEnabled(false);
+        addInstanceButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                addInstanceButtonActionPerformed(evt);
+            }
+        });
+        mainBar.add(addInstanceButton);
+
+        saveModelButton.setText("Save Model");
+        saveModelButton.setEnabled(false);
+        saveModelButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                saveModelButtonActionPerformed(evt);
+            }
+        });
+        mainBar.add(saveModelButton);
+
+        loadModelButton.setText("Load Model");
+        loadModelButton.setEnabled(false);
+        loadModelButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                loadModelButtonActionPerformed(evt);
+            }
+        });
+        mainBar.add(loadModelButton);
+
+        showDataButton.setText("Show Data");
+        showDataButton.setEnabled(false);
+        showDataButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                showDataButtonActionPerformed(evt);
+            }
+        });
+        mainBar.add(showDataButton);
+
         allBar.add(mainBar);
 
-        currentRelation.setLayout(new java.awt.GridLayout(2, 2));
+        currentRelation.setLayout(new javax.swing.BoxLayout(currentRelation, javax.swing.BoxLayout.Y_AXIS));
 
         relationLabel.setText("Relation : ");
         currentRelation.add(relationLabel);
+
+        relationValue.addPropertyChangeListener(new java.beans.PropertyChangeListener() {
+            public void propertyChange(java.beans.PropertyChangeEvent evt) {
+                relationValuePropertyChange(evt);
+            }
+        });
         currentRelation.add(relationValue);
 
         attributesLabel.setText("Attributes : ");
@@ -204,7 +252,8 @@ public class MainWindow extends javax.swing.JFrame {
     private void openButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openButtonActionPerformed
         if(evt.getSource() == this.openButton) {
             this.fc.setAcceptAllFileFilterUsed(false);
-            this.fc.addChoosableFileFilter(new CustomFilter());
+            this.fc.removeChoosableFileFilter(modelformat);
+            this.fc.setFileFilter(arffformat);
             int returnVal = this.fc.showOpenDialog(MainWindow.this);
             
             if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -222,6 +271,8 @@ public class MainWindow extends javax.swing.JFrame {
                     this.saveButton.setEnabled(true);
                     this.filterButton.setEnabled(true);
                     this.startButton.setEnabled(true);
+                    this.addInstanceButton.setEnabled(true);
+                    this.loadModelButton.setEnabled(true);
                 } catch (Exception ex) {
                     Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -234,7 +285,8 @@ public class MainWindow extends javax.swing.JFrame {
     private void saveButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveButtonActionPerformed
         if(evt.getSource()==this.saveButton) {
             this.fc.setAcceptAllFileFilterUsed(false);
-            this.fc.addChoosableFileFilter(new CustomFilter());
+            this.fc.removeChoosableFileFilter(modelformat);
+            this.fc.setFileFilter(arffformat);
             int returnVal = this.fc.showSaveDialog(MainWindow.this);
             
             if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -257,6 +309,8 @@ public class MainWindow extends javax.swing.JFrame {
                 NumericToNominal filter = new NumericToNominal();
                 filter.setInputFormat(this.data);
                 this.data = Filter.useFilter(this.data, filter);
+                this.relationValue.setText(String.valueOf(this.data.relationName()));
+                this.status.setText("Using Filter Done");
             } catch (Exception ex) {
                 Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -271,23 +325,35 @@ public class MainWindow extends javax.swing.JFrame {
                     Evaluation evaluation = new Evaluation(this.data);
                     J48 tree = new J48();
                     evaluation.crossValidateModel(tree, this.data, 10, new Random(1));
-                    this.resultEvaluateArea.setText(evaluation.toSummaryString());
+                    this.resultEvaluateArea.setText(tree.graph() + "\n");
+                    this.resultEvaluateArea.append(tree.toSummaryString());
+                    this.resultEvaluateArea.setText(evaluation.toSummaryString("\n== Summary ==\n",true));
+                    this.resultEvaluateArea.append(evaluation.toClassDetailsString("\n== Detailed Accuracy By Class ==\n"));
+                    this.resultEvaluateArea.append(evaluation.toMatrixString("\n== Confusion Matrix ==\n"));
+                    this.status.setText("Running Cross Validation Completed");
+                    this.saveModelButton.setEnabled(true);
                 } catch (Exception ex) {
                     Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
                 }
             } else if (this.fullRadio.isSelected()) {
                 try {
-                    Classifier cls = new J48();
+                    J48 cls = new J48();
                     cls.buildClassifier(this.data);
                     //evaluate classifier and print some statistics
                     Evaluation eval = new Evaluation(this.data);
                     eval.evaluateModel(cls, this.data);
-                    this.resultEvaluateArea.setText(eval.toSummaryString());
+                    this.resultEvaluateArea.setText(cls.graph() + "\n");
+                    this.resultEvaluateArea.append(cls.toSummaryString());
+                    this.resultEvaluateArea.append(eval.toSummaryString("\n== Summary ==\n",true));
+                    this.resultEvaluateArea.append(eval.toClassDetailsString("\n== Detailed Accuracy By Class ==\n"));
+                    this.resultEvaluateArea.append(eval.toMatrixString("\n== Confusion Matrix ==\n"));
+                    this.status.setText("Running Full Training Completed");
+                    this.saveModelButton.setEnabled(true);
                 } catch (Exception ex) {
                     Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
                 }
             } else {
-                
+                this.status.setText("Please Choose Methode");
             }
         }
     }//GEN-LAST:event_startButtonActionPerformed
@@ -303,6 +369,89 @@ public class MainWindow extends javax.swing.JFrame {
     private void exitActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitActionPerformed
         System.exit(0);
     }//GEN-LAST:event_exitActionPerformed
+
+    private void addInstanceButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addInstanceButtonActionPerformed
+        if(evt.getSource() == this.addInstanceButton) {
+            String[] temp_values = new String[this.data.numAttributes()];
+            double[] values = new double[this.data.numAttributes()];
+            JFrame frame = new JFrame("value");
+            for (int i=0; i<temp_values.length; i++) {
+                temp_values[i] = JOptionPane.showInputDialog(frame, "Value for "+this.data.attribute(i).name(),"Add New Instance");
+                if (temp_values[i] != null) {
+                    if (data.attribute(i).isNumeric()){
+                        values[i] = Double.valueOf(temp_values[i]);
+                    } else if (data.attribute(i).isNominal()){
+                        values[i] = data.attribute(i).indexOfValue(temp_values[i]);
+                    } else if (data.attribute(i).isString()) {
+                        values[i] = data.attribute(i).addStringValue(temp_values[i]);
+                    }
+                } else {
+                    values[i] = 0;
+                }
+            }
+            Instance inst = new DenseInstance(1.0, values);
+            data.add(inst);
+            this.instancesValue.setText(String.valueOf(this.data.numInstances()));
+            this.sumOfWeightsValue.setText(String.valueOf(this.data.sumOfWeights()));
+            this.status.setText("Success Add New Instance!");
+        }
+    }//GEN-LAST:event_addInstanceButtonActionPerformed
+
+    private void relationValuePropertyChange(java.beans.PropertyChangeEvent evt) {//GEN-FIRST:event_relationValuePropertyChange
+        // TODO add your handling code here:
+    }//GEN-LAST:event_relationValuePropertyChange
+
+    private void loadModelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadModelButtonActionPerformed
+        if (evt.getSource() == this.loadModelButton) {
+            this.fc.setAcceptAllFileFilterUsed(false);
+            this.fc.removeChoosableFileFilter(arffformat);
+            this.fc.setFileFilter(modelformat);
+            int returnVal = this.fc.showOpenDialog(MainWindow.this);
+
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                try {
+                    File file = this.fc.getSelectedFile();
+                    this.status.setText("Load module: " + file.getName() + ".\n");
+                    J48 cls = (J48) SerializationHelper.read(file.getAbsolutePath());
+                    this.resultEvaluateArea.setText(cls.graph()+"\n");
+                    this.resultEvaluateArea.append(cls.toSummaryString());
+                } catch (Exception ex) {
+                    Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } else {
+                this.status.setText("Load model canceled by user.\n");
+            }
+        }
+    }//GEN-LAST:event_loadModelButtonActionPerformed
+
+    private void showDataButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_showDataButtonActionPerformed
+        if (evt.getSource() == this.showDataButton) {
+            
+        }
+    }//GEN-LAST:event_showDataButtonActionPerformed
+
+    private void saveModelButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_saveModelButtonActionPerformed
+        if (evt.getSource() == this.saveModelButton) {
+            this.fc.setAcceptAllFileFilterUsed(false);
+            this.fc.removeChoosableFileFilter(arffformat);
+            this.fc.setFileFilter(modelformat);
+            int returnVal = this.fc.showSaveDialog(MainWindow.this);
+
+            if (returnVal == JFileChooser.APPROVE_OPTION) {
+                try {
+                    File file = this.fc.getSelectedFile();
+                    Classifier cls = new J48();
+                    cls.buildClassifier(this.data);
+                    SerializationHelper.write(file.getAbsolutePath(), cls);
+                    this.status.setText("Save model completed.");
+                } catch (Exception ex) {
+                    Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            } else {
+                this.status.setText("Save model canceled by user.\n");
+            }
+        }
+    }//GEN-LAST:event_saveModelButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -338,12 +487,16 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
     }
+    
     private Instances data;
     private final JFileChooser fc = new JFileChooser();
+    private final ArffFile arffformat = new ArffFile();
+    private final ModelFile modelformat = new ModelFile();
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenu File;
     private javax.swing.JMenu Help;
     private javax.swing.JMenuItem aboutMenu;
+    private javax.swing.JButton addInstanceButton;
     private javax.swing.JPanel allBar;
     private javax.swing.JLabel attributesLabel;
     private javax.swing.JLabel attributesValue;
@@ -358,6 +511,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JRadioButton fullRadio;
     private javax.swing.JLabel instancesLabel;
     private javax.swing.JLabel instancesValue;
+    private javax.swing.JButton loadModelButton;
     private javax.swing.JPanel mainBar;
     private javax.swing.JButton openButton;
     private javax.swing.JLabel relationLabel;
@@ -365,6 +519,8 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JScrollPane resultEvaluate;
     private javax.swing.JTextArea resultEvaluateArea;
     private javax.swing.JButton saveButton;
+    private javax.swing.JButton saveModelButton;
+    private javax.swing.JButton showDataButton;
     private javax.swing.JButton startButton;
     private javax.swing.JLabel status;
     private javax.swing.JPanel statusBar;

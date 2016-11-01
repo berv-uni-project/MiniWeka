@@ -6,7 +6,6 @@
 package miniWeka;
 
 import java.io.File;
-import javax.swing.ImageIcon;
 
 /**
  *
@@ -14,6 +13,7 @@ import javax.swing.ImageIcon;
  */
 class Utils {
     public final static String arff = "arff";
+    public final static String model = "model";
     
     /*
      * Get the extension of a file.

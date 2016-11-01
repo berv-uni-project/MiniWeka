@@ -12,7 +12,7 @@ import javax.swing.filechooser.FileFilter;
  *
  * @author Bervianto Leo P
  */
-public class CustomFilter extends FileFilter {
+public class ModelFile extends FileFilter {
     public boolean accept(File f) {
         if (f.isDirectory()) {
             return true;
@@ -20,7 +20,7 @@ public class CustomFilter extends FileFilter {
         
         String extension = Utils.getExtension(f);
         if (extension != null) {
-            if (extension.equals(Utils.arff)) {
+            if (extension.equals(Utils.model)) {
                 return true;
             } else {
                 return false;
@@ -30,6 +30,6 @@ public class CustomFilter extends FileFilter {
     }
     
     public String getDescription() {
-        return "*.arff file";
+        return "*.model file";
     }
 }
