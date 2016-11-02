@@ -56,6 +56,7 @@ public class MainWindow extends javax.swing.JFrame {
         saveModelButton = new javax.swing.JButton();
         loadModelButton = new javax.swing.JButton();
         showDataButton = new javax.swing.JButton();
+        clasifyButton = new javax.swing.JButton();
         currentRelation = new javax.swing.JPanel();
         relationLabel = new javax.swing.JLabel();
         relationValue = new javax.swing.JLabel();
@@ -82,7 +83,7 @@ public class MainWindow extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Mini Weka");
-        getContentPane().setLayout(new java.awt.GridLayout());
+        getContentPane().setLayout(new java.awt.GridLayout(1, 0));
 
         allBar.setLayout(new javax.swing.BoxLayout(allBar, javax.swing.BoxLayout.PAGE_AXIS));
 
@@ -147,6 +148,15 @@ public class MainWindow extends javax.swing.JFrame {
             }
         });
         mainBar.add(showDataButton);
+
+        clasifyButton.setText("Clasify New Instance with Loaded Model");
+        clasifyButton.setEnabled(false);
+        clasifyButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                clasifyButtonActionPerformed(evt);
+            }
+        });
+        mainBar.add(clasifyButton);
 
         allBar.add(mainBar);
 
@@ -372,11 +382,12 @@ public class MainWindow extends javax.swing.JFrame {
 
     private void addInstanceButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addInstanceButtonActionPerformed
         if(evt.getSource() == this.addInstanceButton) {
+            // Must valid input and added class to
             String[] temp_values = new String[this.data.numAttributes()];
             double[] values = new double[this.data.numAttributes()];
             JFrame frame = new JFrame("value");
             for (int i=0; i<temp_values.length; i++) {
-                temp_values[i] = JOptionPane.showInputDialog(frame, "Value for "+this.data.attribute(i).name(),"Add New Instance");
+                temp_values[i] = JOptionPane.showInputDialog(frame, "Value for "+this.data.attribute(i).name());
                 if (temp_values[i] != null) {
                     if (data.attribute(i).isNumeric()){
                         values[i] = Double.valueOf(temp_values[i]);
@@ -412,9 +423,10 @@ public class MainWindow extends javax.swing.JFrame {
                 try {
                     File file = this.fc.getSelectedFile();
                     this.status.setText("Load module: " + file.getName() + ".\n");
-                    J48 cls = (J48) SerializationHelper.read(file.getAbsolutePath());
-                    this.resultEvaluateArea.setText(cls.graph()+"\n");
-                    this.resultEvaluateArea.append(cls.toSummaryString());
+                    loadedModel = (J48) SerializationHelper.read(file.getAbsolutePath());
+                    this.resultEvaluateArea.setText(loadedModel.graph()+"\n");
+                    this.resultEvaluateArea.append(loadedModel.toSummaryString());
+                    this.clasifyButton.setEnabled(true);
                 } catch (Exception ex) {
                     Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -452,6 +464,38 @@ public class MainWindow extends javax.swing.JFrame {
             }
         }
     }//GEN-LAST:event_saveModelButtonActionPerformed
+
+    private void clasifyButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_clasifyButtonActionPerformed
+        if (evt.getSource() == this.clasifyButton) {
+            try {
+                Instances newdata = new Instances(data);
+                String[] temp_values = new String[this.data.numAttributes()];
+                double[] values = new double[this.data.numAttributes()];
+                JFrame frame = new JFrame("value");
+                for (int i=0; i<temp_values.length-1; i++) {
+                    temp_values[i] = JOptionPane.showInputDialog(frame, "Value for "+this.data.attribute(i).name());
+                    if (temp_values[i] != null) {
+                        if (data.attribute(i).isNumeric()){
+                            values[i] = Double.valueOf(temp_values[i]);
+                        } else if (data.attribute(i).isNominal()){
+                            values[i] = data.attribute(i).indexOfValue(temp_values[i]);
+                        } else if (data.attribute(i).isString()) {
+                            values[i] = data.attribute(i).addStringValue(temp_values[i]);
+                        }
+                    } else {
+                        values[i] = 0;
+                    }
+                }
+                Instance inst = new DenseInstance(1.0, values);
+                newdata.add(inst);
+                double result = loadedModel.classifyInstance(newdata.lastInstance());
+                this.resultEvaluateArea.setText("=== Classify Result ===\n");
+                this.resultEvaluateArea.append(newdata.classAttribute().value((int)result));
+            } catch (Exception ex) {
+                Logger.getLogger(MainWindow.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }//GEN-LAST:event_clasifyButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -492,6 +536,7 @@ public class MainWindow extends javax.swing.JFrame {
     private final JFileChooser fc = new JFileChooser();
     private final ArffFile arffformat = new ArffFile();
     private final ModelFile modelformat = new ModelFile();
+    private J48 loadedModel;
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JMenu File;
     private javax.swing.JMenu Help;
@@ -500,6 +545,7 @@ public class MainWindow extends javax.swing.JFrame {
     private javax.swing.JPanel allBar;
     private javax.swing.JLabel attributesLabel;
     private javax.swing.JLabel attributesValue;
+    private javax.swing.JButton clasifyButton;
     private javax.swing.JRadioButton crossRadio;
     private javax.swing.JPanel currentRelation;
     private javax.swing.JMenuBar defaultMenu;
