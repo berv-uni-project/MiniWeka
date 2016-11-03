@@ -334,6 +334,7 @@ public class MainWindow extends javax.swing.JFrame {
                     // cross-validate classifier
                     Evaluation evaluation = new Evaluation(this.data);
                     J48 tree = new J48();
+                    tree.buildClassifier(this.data);
                     evaluation.crossValidateModel(tree, this.data, 10, new Random(1));
                     this.resultEvaluateArea.setText(tree.graph() + "\n");
                     this.resultEvaluateArea.append(tree.toSummaryString());
