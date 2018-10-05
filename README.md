@@ -1,4 +1,7 @@
 # Mini Weka
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/2b2f97eeccbd41aab963053ceb8c3132)](https://app.codacy.com/app/berviantoleo/MiniWeka?utm_source=github.com&utm_medium=referral&utm_content=berv-uni-project/MiniWeka&utm_campaign=Badge_Grade_Settings)
+
 Weka implementation using Weka API.
 
 ## Main Window Interface
